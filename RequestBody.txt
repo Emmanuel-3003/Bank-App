@@ -1,0 +1,30 @@
+Create Customer ->
+{
+  "firstName": "Emmanuel",
+  "lastName": "Gabriel",
+  "email": "emm.gab@example.com",
+  "dateOfBirth": "2003-03-30",
+  "address": "22 Cauvery",
+  "city": "Mumbai",
+  "state": "Maharashtra",
+  "country": "India",
+  "pinCode": "400017"
+}
+-------------------------------------------
+Update Customer ->
+{
+  "firstName": "Emmanuel",
+  "lastName": "Gabriel",
+  "email": "emm.gab@example.com",
+  "dateOfBirth": "2003-03-30",
+  "address": "22 Cauvery CHS",
+  "city": "Mumbai",
+  "state": "Maharashtra",
+  "country": "India",
+  "pinCode": "400017"
+}
+-------------------------------------------
+{
+    "accountName": "Emm Savings Account",
+    "accountType": "SAVINGS",
+}
