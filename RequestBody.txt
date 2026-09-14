@@ -1,10 +1,10 @@
 Create Customer ->
 {
-  "firstName": "Emmanuel",
-  "lastName": "Gabriel",
-  "email": "emm.gab@example.com",
-  "dateOfBirth": "2003-03-30",
-  "address": "22 Cauvery",
+  "firstName": "Jack",
+  "lastName": "Don",
+  "email": "jack.don@example.com",
+  "dateOfBirth": "1999-02-10",
+  "address": "22 Bandra",
   "city": "Mumbai",
   "state": "Maharashtra",
   "country": "India",
@@ -13,11 +13,11 @@ Create Customer ->
 -------------------------------------------
 Update Customer ->
 {
-  "firstName": "Emmanuel",
-  "lastName": "Gabriel",
-  "email": "emm.gab@example.com",
-  "dateOfBirth": "2003-03-30",
-  "address": "22 Cauvery CHS",
+  "firstName": "Jack",
+  "lastName": "Don",
+  "email": "jack.don@example.com",
+  "dateOfBirth": "1999-02-10",
+  "address": "22 Bandra CHS",
   "city": "Mumbai",
   "state": "Maharashtra",
   "country": "India",
@@ -26,7 +26,7 @@ Update Customer ->
 -------------------------------------------
 Create Account ->
 {
-    "accountName": "Emm Savings Account",
+    "accountName": "Jack Savings Account",
     "accountType": "SAVINGS",
 }
 -------------------------------------------
