@@ -8,7 +8,7 @@ import com.application.bank.payload.AccountResponse;
 public interface AccountService {
 
     AccountDTO openAccount(AccountDTO accountDTO, Long customerId);
-    String closeAccount(Long id);
     AccountResponse getAccountsByCustomer(Long customerId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+    AccountDTO updateAccountDetails(String accountNumber, AccountDTO accountDTO);
     String updateAccountStatus(String accountNumber, AccountStatus status);
 }

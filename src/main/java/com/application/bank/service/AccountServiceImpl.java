@@ -1,5 +1,6 @@
 package com.application.bank.service;
 
+import com.application.bank.exceptions.APIException;
 import com.application.bank.exceptions.ResourceNotFoundException;
 import com.application.bank.model.Account;
 import com.application.bank.model.AccountStatus;
@@ -8,14 +9,20 @@ import com.application.bank.model.Customer;
 import com.application.bank.payload.APIResponse;
 import com.application.bank.payload.AccountDTO;
 import com.application.bank.payload.AccountResponse;
+import com.application.bank.payload.CustomerDTO;
 import com.application.bank.repository.AccountRepository;
 import com.application.bank.repository.CustomerRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -47,13 +54,44 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public String closeAccount(Long id) {
-        return "";
+    public AccountResponse getAccountsByCustomer(Long customerId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+
+        customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("customer", "custimer ID", customerId));
+
+        Page<Account> accountPage = accountRepository.findByCustomerId(customerId, pageDetails);
+        List<Account> accounts = accountPage.getContent();
+
+        List<AccountDTO> accountDTOS = accounts.stream()
+                .map(acc -> {
+                    AccountDTO dto = modelMapper.map(acc, AccountDTO.class);
+                    dto.setCustomerId(customerId);
+                    return dto;
+                })
+                .toList();
+
+        AccountResponse accountResponse = new AccountResponse();
+        accountResponse.setContent(accountDTOS);
+        accountResponse.setPageNumber(pageNumber);
+        accountResponse.setPageSize(pageSize);
+        accountResponse.setTotalElements(accountPage.getTotalElements());
+        accountResponse.setTotalPages(accountPage.getTotalPages());
+        accountResponse.setLastPage(accountPage.isLast());
+        return accountResponse;
     }
 
     @Override
-    public AccountResponse getAccountsByCustomer(Long customerId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        return null;
+    public AccountDTO updateAccountDetails(String accountNumber, AccountDTO accountDTO) {
+        Account savedAccount = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+
+        savedAccount.setAccountName(accountDTO.getAccountName());
+        accountRepository.save(savedAccount);
+        return modelMapper.map(savedAccount, AccountDTO.class);
     }
 
     @Override

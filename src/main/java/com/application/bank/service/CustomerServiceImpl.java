@@ -82,7 +82,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         List<CustomerDTO> customerDTOS = customers.stream()
-                .map(category -> modelMapper.map(category, CustomerDTO.class))
+                .map(customer -> modelMapper.map(customer, CustomerDTO.class))
                 .toList();
         CustomerResponse customerResponse = new CustomerResponse();
         customerResponse.setContent(customerDTOS);

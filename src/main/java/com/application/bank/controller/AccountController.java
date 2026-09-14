@@ -26,13 +26,6 @@ public class AccountController {
         return new ResponseEntity<>(newAccount, HttpStatus.CREATED);
     }
 
-    @PutMapping("/accounts/{accountNumber}/status/{status}")
-    public ResponseEntity<APIResponse> updateAccountStatus(@PathVariable String accountNumber, @PathVariable AccountStatus status){
-        String message = accountService.updateAccountStatus(accountNumber, status);
-        APIResponse response = new APIResponse(message, true);
-        return new ResponseEntity<> (response, HttpStatus.OK);
-    }
-
     @GetMapping("/customers/{customerId}/accounts")
     public ResponseEntity<AccountResponse> getAccountsByCustomer(
             @PathVariable Long customerId,
@@ -44,4 +37,18 @@ public class AccountController {
         AccountResponse accountResponse = accountService.getAccountsByCustomer(customerId, pageNumber, pageSize, sortBy, sortOrder);
         return new ResponseEntity<>(accountResponse, HttpStatus.OK);
     }
+
+    @PutMapping("/accounts/{accountNumber}")
+    public ResponseEntity<AccountDTO> updateAccountDetails(@PathVariable String accountNumber, @RequestBody AccountDTO accountDTO){
+        AccountDTO account = accountService.updateAccountDetails(accountNumber, accountDTO);
+        return new ResponseEntity<>(account, HttpStatus.OK);
+    }
+
+    @PutMapping("/accounts/{accountNumber}/status/{status}")
+    public ResponseEntity<APIResponse> updateAccountStatus(@PathVariable String accountNumber, @PathVariable AccountStatus status){
+        String message = accountService.updateAccountStatus(accountNumber, status);
+        APIResponse response = new APIResponse(message, true);
+        return new ResponseEntity<> (response, HttpStatus.OK);
+    }
+
 }
