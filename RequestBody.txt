@@ -24,7 +24,13 @@ Update Customer ->
   "pinCode": "400017"
 }
 -------------------------------------------
+Create Account ->
 {
     "accountName": "Emm Savings Account",
     "accountType": "SAVINGS",
+}
+-------------------------------------------
+Update Account ->
+{
+    "accountName" : "New Name"
 }
