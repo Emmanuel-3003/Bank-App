@@ -19,7 +19,7 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String tranId;
+    private String trxnId;
 
     @ManyToOne
     @JoinColumn(name = "account_id")
