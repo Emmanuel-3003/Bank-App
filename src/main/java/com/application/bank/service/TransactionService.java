@@ -4,5 +4,5 @@ import com.application.bank.payload.TransactionDTO;
 
 public interface TransactionService {
 
-    String deposit(String accountNumber, TransactionDTO transactionDTO);
+    TransactionDTO deposit(String accountNumber, TransactionDTO transactionDTO);
 }

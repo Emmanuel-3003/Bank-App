@@ -32,11 +32,11 @@ public class TransactionServiceImpl implements TransactionService{
 
     @Transactional
     @Override
-    public String deposit(String accountNumber, TransactionDTO transactionDTO) {
+    public TransactionDTO deposit(String accountNumber, TransactionDTO transactionDTO) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
         if(account.getAccountStatus().equals(AccountStatus.CLOSED) || account.getAccountStatus().equals(AccountStatus.INACTIVE)){
-            throw new APIException("Money cant be deposited due to account status " + account.getAccountStatus() + ".");
+            throw new APIException("Money cant be deposited, as the account status is " + account.getAccountStatus() + ".");
         }
         if (transactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new APIException("Deposit amount must be greater than zero.");
@@ -53,6 +53,8 @@ public class TransactionServiceImpl implements TransactionService{
         newTran.setTransactionType(TransactionType.CREDIT);
         newTran.setBalanceAfterTransaction(account.getBalance());
         transactionRepository.save(newTran);
-        return "Amount of " + transactionDTO.getAmount() +" has been deposited to Account " + accountNumber +"..";
+        TransactionDTO newTranDTO = modelMapper.map(newTran, TransactionDTO.class);
+        newTranDTO.setAccountNumber(accountNumber);
+        return newTranDTO;
     }
 }

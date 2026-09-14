@@ -34,3 +34,9 @@ Update Account ->
 {
     "accountName" : "New Name"
 }
+-------------------------------------------
+Deposit Money in Account ->
+{
+  "amount": 5000,
+  "trxnNote": "Cash deposit at branch"
+}

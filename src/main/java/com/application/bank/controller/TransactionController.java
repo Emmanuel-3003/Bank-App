@@ -15,8 +15,8 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping("/account/{accountNumber}/deposit")
-    public ResponseEntity<String> deposit(@PathVariable String accountNumber, @RequestBody TransactionDTO transactionDTO){
-        String message = transactionService.deposit(accountNumber, transactionDTO);
+    public ResponseEntity<TransactionDTO> deposit(@PathVariable String accountNumber, @RequestBody TransactionDTO transactionDTO){
+        TransactionDTO message = transactionService.deposit(accountNumber, transactionDTO);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 }
