@@ -61,7 +61,7 @@ public class AccountServiceImpl implements AccountService {
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
         customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("customer", "custimer ID", customerId));
+                .orElseThrow(() -> new ResourceNotFoundException("customer", "customer ID", customerId));
 
         Page<Account> accountPage = accountRepository.findByCustomerId(customerId, pageDetails);
         List<Account> accounts = accountPage.getContent();
@@ -99,6 +99,9 @@ public class AccountServiceImpl implements AccountService {
         Account accountFromDB = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "Acc. No. ", accountNumber));
 
+        if(accountFromDB.getAccountStatus() == AccountStatus.CLOSED){
+            return "Status cannot be changed as Account is already closed..";
+        }
         if(accountFromDB.getAccountStatus() == status){
             return "Account status is already " + status + "..";
         }

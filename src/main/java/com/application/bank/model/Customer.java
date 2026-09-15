@@ -57,7 +57,7 @@ public class Customer {
             message = "Pin-code must be a valid 6-digit number"
     )
     private String pinCode;
-
-    @OneToMany(mappedBy = "customer")
-    private List<Account> accounts;
+//
+//    @OneToMany(mappedBy = "customer")
+//    private List<Account> accounts;
 }

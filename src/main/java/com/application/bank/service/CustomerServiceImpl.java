@@ -77,9 +77,6 @@ public class CustomerServiceImpl implements CustomerService {
         Pageable pageDetails =  PageRequest.of(pageNumber, pageSize, sortByAndOrder);
         Page<Customer> customerPage = customerRepository.findAll(pageDetails);
         List<Customer> customers =  customerPage.getContent();
-        if(customers.isEmpty()){
-            throw new APIException("There are no customers..");
-        }
 
         List<CustomerDTO> customerDTOS = customers.stream()
                 .map(customer -> modelMapper.map(customer, CustomerDTO.class))
@@ -92,6 +89,5 @@ public class CustomerServiceImpl implements CustomerService {
         customerResponse.setTotalPages(customerPage.getTotalPages());
         customerResponse.setLastPage(customerPage.isLast());
         return customerResponse;
-
     }
 }
