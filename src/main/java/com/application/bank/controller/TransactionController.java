@@ -19,4 +19,10 @@ public class TransactionController {
         TransactionDTO message = transactionService.deposit(accountNumber, transactionDTO);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
+
+    @PostMapping("/account/{accountNumber}/withdraw")
+    public ResponseEntity<TransactionDTO> withdraw(@PathVariable String accountNumber, @RequestBody TransactionDTO transactionDTO){
+        TransactionDTO message = transactionService.withdraw(accountNumber, transactionDTO);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
 }

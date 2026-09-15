@@ -57,4 +57,32 @@ public class TransactionServiceImpl implements TransactionService{
         newTranDTO.setAccountNumber(accountNumber);
         return newTranDTO;
     }
+
+    @Override
+    public TransactionDTO withdraw(String accountNumber, TransactionDTO transactionDTO) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+        if(account.getAccountStatus().equals(AccountStatus.CLOSED) || account.getAccountStatus().equals(AccountStatus.INACTIVE)){
+            throw new APIException("Money cant be deposited, as the account status is " + account.getAccountStatus() + ".");
+        }
+        if(account.getBalance().compareTo(transactionDTO.getAmount()) < 0){
+            throw new APIException("Insufficient Balance. Your Current balance is " + account.getBalance() + ".");
+        }
+
+        BigDecimal newBal = account.getBalance().subtract(transactionDTO.getAmount());
+        account.setBalance(newBal);
+        accountRepository.save(account);
+
+        Transaction newTran = modelMapper.map(transactionDTO, Transaction.class);
+        newTran.setAccount(account);
+        String trxnId = "TRXN" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        newTran.setTrxnId(trxnId);
+        newTran.setTransactionTime(LocalDateTime.now());
+        newTran.setTransactionType(TransactionType.DEBIT);
+        newTran.setBalanceAfterTransaction(account.getBalance());
+        transactionRepository.save(newTran);
+        TransactionDTO newTranDTO = modelMapper.map(newTran, TransactionDTO.class);
+        newTranDTO.setAccountNumber(accountNumber);
+        return newTranDTO;
+    }
 }

@@ -25,7 +25,7 @@ public class Transaction {
     @JoinColumn(name = "account_id")
     private Account account;
 
-    @Column(name = "transfer_amount")
+    @Column(name = "transaction_amount")
     private BigDecimal amount;
 
     private LocalDateTime transactionTime;
