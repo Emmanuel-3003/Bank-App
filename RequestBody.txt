@@ -1,3 +1,5 @@
+Contains all the DTO for the API created.
+-------------------------------------------
 Create Customer ->
 {
   "firstName": "Jack",
@@ -39,4 +41,18 @@ Deposit Money in Account ->
 {
   "amount": 5000,
   "trxnNote": "Cash deposit at branch"
+}
+-------------------------------------------
+Withdraw Money from Account ->
+{
+  "amount": 5000,
+  "trxnNote": "Cash withdraw at branch"
+}
+-------------------------------------------
+Transfer Money from One Account to another ->
+{
+    "fromAccountNumber" : "AC000001",
+    "toAccountNumber" : "AC000002",
+    "amount": 4000,
+    "trxnNote": "Cash transfer.."
 }

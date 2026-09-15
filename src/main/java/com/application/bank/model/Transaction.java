@@ -38,4 +38,13 @@ public class Transaction {
     @Size(min = 5, max = 200)
     private String trxnNote;
 
+    public Transaction(String trxnId, Account fromAcc, BigDecimal amount, LocalDateTime now, TransactionType transactionType, BigDecimal balance, String trxnNote) {
+        this.trxnId = trxnId;
+        this.account = fromAcc;
+        this.amount = amount;
+        this.transactionTime = now;
+        this.transactionType = transactionType;
+        this.balanceAfterTransaction = balance;
+        this.trxnNote = trxnNote;
+    }
 }
