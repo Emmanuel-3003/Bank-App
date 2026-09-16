@@ -102,6 +102,9 @@ public class AccountServiceImpl implements AccountService {
         if(accountFromDB.getAccountStatus() == AccountStatus.CLOSED){
             return "Status cannot be changed as Account is already closed..";
         }
+        if(status == AccountStatus.CLOSED && (accountFromDB.getBalance().compareTo(BigDecimal.ZERO) > 0)){
+            return "Account cannot be closed with a remaining balance of " + accountFromDB.getBalance() + ". Please withdraw the full amount before closing.";
+        }
         if(accountFromDB.getAccountStatus() == status){
             return "Account status is already " + status + "..";
         }
