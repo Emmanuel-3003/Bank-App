@@ -6,6 +6,7 @@ import com.application.bank.model.Account;
 import com.application.bank.model.AccountStatus;
 import com.application.bank.model.Transaction;
 import com.application.bank.model.TransactionType;
+import com.application.bank.payload.StatementResponse;
 import com.application.bank.payload.TransactionDTO;
 import com.application.bank.payload.TransferRequestDTO;
 import com.application.bank.payload.TransferResponseDTO;
@@ -13,11 +14,17 @@ import com.application.bank.repository.AccountRepository;
 import com.application.bank.repository.TransactionRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -156,5 +163,87 @@ public class TransactionServiceImpl implements TransactionService{
                 LocalDateTime.now(),
                 transferRequestDTO.getTrxnNote());
         return tranResponse;
+    }
+
+    @Override
+    public StatementResponse getAccountStatement(String accountNumber, LocalDate fromDate, LocalDate toDate, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+
+        LocalDateTime fromDateTime = (fromDate != null) ? fromDate.atStartOfDay() : null;
+        LocalDateTime toDateTime = (toDate != null) ? toDate.plusDays(1).atStartOfDay() : null;
+
+        Page<Transaction> statementPage = (fromDateTime != null && toDateTime != null)
+                ? transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime, pageDetails)
+                : transactionRepository.findByAccount_AccountNumber(accountNumber, pageDetails);
+        List<Transaction> transactions = statementPage.getContent();
+
+        List<Transaction> allTransactionsInRange = (fromDateTime != null && toDateTime != null)
+                ? transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime)
+                : transactionRepository.findByAccount_AccountNumber(accountNumber);
+
+        if (transactions.isEmpty()) {
+            StatementResponse emptyResponse = new StatementResponse();
+            emptyResponse.setAccountNumber(accountNumber);
+            emptyResponse.setFromDate(fromDate);
+            emptyResponse.setToDate(toDate);   // FIXED — was fromDate
+            emptyResponse.setOpeningBalance(account.getBalance());
+            emptyResponse.setCurrentBalance(account.getBalance());
+            emptyResponse.setTotalCredits(BigDecimal.ZERO);
+            emptyResponse.setTotalDebits(BigDecimal.ZERO);
+            emptyResponse.setTransactions(List.of());
+            emptyResponse.setPageNumber(statementPage.getNumber());
+            emptyResponse.setPageSize(statementPage.getSize());
+            emptyResponse.setTotalElements(statementPage.getTotalElements());
+            emptyResponse.setTotalPages(statementPage.getTotalPages());
+            emptyResponse.setLastPage(statementPage.isLast());
+            return emptyResponse;
+        }
+
+        List<TransactionDTO> transactionDTOS = transactions.stream()
+                .map(txn -> {
+                    TransactionDTO dto = modelMapper.map(txn, TransactionDTO.class);
+                    dto.setAccountNumber(accountNumber);
+                    return dto;
+                })
+                .toList();
+
+        StatementResponse response = new StatementResponse();
+        response.setAccountNumber(accountNumber);
+        response.setFromDate(fromDate);
+        response.setToDate(toDate);
+
+        //Balance
+        BigDecimal openingBalance = transactionRepository
+                .findTopByAccount_AccountNumberAndTransactionTimeBeforeOrderByTransactionTimeDesc(accountNumber, fromDateTime)
+                .map(Transaction::getBalanceAfterTransaction)
+                .orElse(BigDecimal.ZERO);
+        response.setOpeningBalance(openingBalance);
+        response.setCurrentBalance(account.getBalance());
+
+        //Total Credits and Debits
+        BigDecimal totalCredits = BigDecimal.ZERO;
+        BigDecimal totalDebits = BigDecimal.ZERO;
+        for (Transaction trxn : allTransactionsInRange) {
+            if (trxn.getTransactionType() == TransactionType.CREDIT) {
+                totalCredits = totalCredits.add(trxn.getAmount());
+            }
+            if (trxn.getTransactionType() == TransactionType.DEBIT) {
+                totalDebits = totalDebits.add(trxn.getAmount());
+            }
+        }
+        response.setTotalCredits(totalCredits);
+        response.setTotalDebits(totalDebits);
+        response.setTransactions(transactionDTOS);
+        response.setPageNumber(pageNumber);
+        response.setPageSize(pageSize);
+        response.setTotalElements(statementPage.getTotalElements());
+        response.setTotalPages(statementPage.getTotalPages());
+        response.setLastPage(statementPage.isLast());
+        return response;
     }
 }

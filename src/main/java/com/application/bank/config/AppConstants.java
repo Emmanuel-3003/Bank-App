@@ -5,4 +5,5 @@ public class AppConstants {
     public static final String PAGE_SIZE = "10";
     public static final String SORT_CUSTOMER_BY = "id";
     public static final String SORT_DIR = "asc";
+    public static final String SORT_TRANSACTION_BY = "transactionTime";
 }
