@@ -1,8 +1,7 @@
-package com.application.bank.service;
+package com.application.bank.security;
 
 import com.application.bank.model.Customer;
 import com.application.bank.repository.CustomerRepository;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
