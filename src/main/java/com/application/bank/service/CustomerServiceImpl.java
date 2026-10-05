@@ -29,9 +29,8 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerDTO createCustomer(CustomerDTO customerDTO) {
         Customer customer = modelMapper.map(customerDTO, Customer.class);
-        Customer customerFromDB = customerRepository.findByEmail(customer.getEmail());
-        if(customerFromDB != null){
-            throw new APIException("Customer with email " + customerFromDB.getEmail() + " already exists..");
+        if (customerRepository.findByEmail(customer.getEmail()).isPresent()) {
+            throw new APIException("Customer with email " + customer.getEmail() + " already exists..");
         }
         customer.setDateOfJoining(LocalDate.now());
         Customer savedCustomer = customerRepository.save(customer);

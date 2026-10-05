@@ -32,6 +32,8 @@ public class Customer {
     @Email(message = "Please provide email")
     private String email;
 
+    private String password;
+
     @NotNull(message = "Date of birth is required")
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
