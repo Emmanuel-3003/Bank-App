@@ -27,19 +27,6 @@ public class CustomerServiceImpl implements CustomerService {
     private ModelMapper modelMapper;
 
     @Override
-    public CustomerDTO createCustomer(CustomerDTO customerDTO) {
-        Customer customer = modelMapper.map(customerDTO, Customer.class);
-        if (customerRepository.findByEmail(customer.getEmail()).isPresent()) {
-            throw new APIException("Customer with email " + customer.getEmail() + " already exists..");
-        }
-        customer.setDateOfJoining(LocalDate.now());
-        Customer savedCustomer = customerRepository.save(customer);
-        savedCustomer.setCustomerCode(String.format("CU%06d", savedCustomer.getId()));
-        savedCustomer =  customerRepository.save(savedCustomer);
-        return modelMapper.map(savedCustomer, CustomerDTO.class);
-    }
-
-    @Override
     public CustomerDTO updateCustomer(CustomerDTO customerDTO, Long id) {
         Customer savedCustomer = customerRepository.findById(id).
                 orElseThrow(() -> new ResourceNotFoundException("Customer", "ID", id));

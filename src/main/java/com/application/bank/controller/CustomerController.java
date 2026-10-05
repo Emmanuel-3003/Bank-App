@@ -18,12 +18,6 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @PostMapping("/customers")
-    public ResponseEntity<CustomerDTO> createCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
-        CustomerDTO createdCustomerDTO = customerService.createCustomer(customerDTO);
-        return new ResponseEntity<>(createdCustomerDTO, HttpStatus.CREATED);
-    }
-
     @GetMapping("/customers")
     public ResponseEntity<CustomerResponse> getAllCustomer(
             @RequestParam (name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
