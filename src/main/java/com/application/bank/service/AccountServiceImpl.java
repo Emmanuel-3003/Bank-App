@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -60,8 +61,13 @@ public class AccountServiceImpl implements AccountService {
                 : Sort.by(sortBy).descending();
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
-        customerRepository.findById(customerId)
+        Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("customer", "customer ID", customerId));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!customer.getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to access this customer's accounts.");
+        }
 
         Page<Account> accountPage = accountRepository.findByCustomerId(customerId, pageDetails);
         List<Account> accounts = accountPage.getContent();
@@ -89,6 +95,11 @@ public class AccountServiceImpl implements AccountService {
         Account savedAccount = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
 
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!savedAccount.getCustomer().getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to access this account.");
+        }
+
         savedAccount.setAccountName(accountDTO.getAccountName());
         accountRepository.save(savedAccount);
         return modelMapper.map(savedAccount, AccountDTO.class);
@@ -98,6 +109,11 @@ public class AccountServiceImpl implements AccountService {
     public String updateAccountStatus(String accountNumber, AccountStatus status) {
         Account accountFromDB = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "Acc. No. ", accountNumber));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!accountFromDB.getCustomer().getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to access this account.");
+        }
 
         if(accountFromDB.getAccountStatus() == AccountStatus.CLOSED){
             return "Status cannot be changed as Account is already closed..";

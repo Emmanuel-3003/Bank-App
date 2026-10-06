@@ -1,8 +1,9 @@
 package com.application.bank.security.service;
 
 import com.application.bank.exceptions.APIException;
-import com.application.bank.exceptions.ResourceNotFoundException;
+import com.application.bank.model.BlacklistedToken;
 import com.application.bank.model.Customer;
+import com.application.bank.repository.BlacklistedTokenRepository;
 import com.application.bank.repository.CustomerRepository;
 import com.application.bank.security.LoginRequestDTO;
 import com.application.bank.security.LoginResponseDTO;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -35,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private BlacklistedTokenRepository blacklistedTokenRepository;
 
     @Override
     public String register(RegisterRequestDTO registerRequestDTO) {
@@ -65,4 +70,19 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtUtils.generateToken(loginRequestDTO.getEmail());
         return new LoginResponseDTO(loginRequestDTO.getEmail(), token);
     }
+
+    @Override
+    public String logout(String authHeader) {
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            String token = authHeader.substring(7);
+            Date expiry = jwtUtils.extractExpiration(token);
+
+            BlacklistedToken blacklistedToken = new BlacklistedToken();
+            blacklistedToken.setToken(token);
+            blacklistedToken.setExpiryDate(expiry);
+            blacklistedTokenRepository.save(blacklistedToken);
+        }
+        return "Logged Out successfully...";
+    }
+
 }

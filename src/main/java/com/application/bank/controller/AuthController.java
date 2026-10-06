@@ -4,6 +4,7 @@ import com.application.bank.security.LoginRequestDTO;
 import com.application.bank.security.LoginResponseDTO;
 import com.application.bank.security.RegisterRequestDTO;
 import com.application.bank.security.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,5 +31,12 @@ public class AuthController {
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
         LoginResponseDTO response = authService.login(loginRequestDTO);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request){
+        String authHeader = request.getHeader("Authorization");
+        String message = authService.logout(authHeader);
+        return new ResponseEntity<>(message, HttpStatus.OK);
     }
 }

@@ -8,4 +8,5 @@ import com.application.bank.security.RegisterRequestDTO;
 public interface AuthService {
     LoginResponseDTO login(LoginRequestDTO loginRequestDTO);
     String register(RegisterRequestDTO registerRequestDTO);
+    String logout(String authHeader);
 }

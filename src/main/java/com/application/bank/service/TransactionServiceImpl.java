@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,12 @@ public class TransactionServiceImpl implements TransactionService{
     public TransactionDTO deposit(String accountNumber, TransactionDTO transactionDTO) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!account.getCustomer().getEmail().equals(authenticatedEmail)){
+            throw new APIException("You do not have permission to access this account..");
+        }
+
         if(account.getAccountStatus().equals(AccountStatus.CLOSED) || account.getAccountStatus().equals(AccountStatus.INACTIVE)){
             throw new APIException("Money cant be deposited, as your account status is " + account.getAccountStatus() + ".");
         }
@@ -72,6 +79,12 @@ public class TransactionServiceImpl implements TransactionService{
     public TransactionDTO withdraw(String accountNumber, TransactionDTO transactionDTO) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!account.getCustomer().getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to access this account.");
+        }
+
         if(account.getAccountStatus().equals(AccountStatus.CLOSED) || account.getAccountStatus().equals(AccountStatus.INACTIVE)){
             throw new APIException("Money can't be withdrawn, as your account status is " + account.getAccountStatus() + ".");
         }
@@ -103,6 +116,11 @@ public class TransactionServiceImpl implements TransactionService{
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", transferRequestDTO.getFromAccountNumber()));
         Account toAcc = accountRepository.findByAccountNumber(transferRequestDTO.getToAccountNumber())
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", transferRequestDTO.getToAccountNumber()));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!fromAcc.getCustomer().getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to transfer from this account.");
+        }
 
         if(fromAcc.getAccountStatus().equals(AccountStatus.CLOSED) || fromAcc.getAccountStatus().equals(AccountStatus.INACTIVE)){
             throw new APIException("Money can't be transferred, as your account status is " + fromAcc.getAccountStatus() + ".");
@@ -169,6 +187,12 @@ public class TransactionServiceImpl implements TransactionService{
     public StatementResponse getAccountStatement(String accountNumber, LocalDate fromDate, LocalDate toDate, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!account.getCustomer().getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to access this customer's accounts.");
+        }
+
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
