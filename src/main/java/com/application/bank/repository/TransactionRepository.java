@@ -16,9 +16,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Page<Transaction> findByAccount_AccountNumber(String accountNumber, Pageable pageable);
     Page<Transaction> findByAccount_AccountNumberAndTransactionTimeBetween(
             String accountNumber, LocalDateTime fromDateTime, LocalDateTime toDateTime, Pageable pageable);
+
     Optional<Transaction> findTopByAccount_AccountNumberAndTransactionTimeBeforeOrderByTransactionTimeDesc(
             String accountNumber, LocalDateTime fromDateTime);
+
     List<Transaction> findByAccount_AccountNumber(String accountNumber);
     List<Transaction> findByAccount_AccountNumberAndTransactionTimeBetween(
             String accountNumber, LocalDateTime fromDateTime, LocalDateTime toDateTime);
+
+    Page<Transaction> findByAccount_AccountNumberAndTransactionTimeAfter(String accountNumber, LocalDateTime fromDateTime, Pageable pageable);
+    List<Transaction> findByAccount_AccountNumberAndTransactionTimeAfter(String accountNumber, LocalDateTime fromDateTime);
+
+    Page<Transaction> findByAccount_AccountNumberAndTransactionTimeBefore(String accountNumber, LocalDateTime toDateTime, Pageable pageable);
+    List<Transaction> findByAccount_AccountNumberAndTransactionTimeBefore(String accountNumber, LocalDateTime toDateTime);
 }

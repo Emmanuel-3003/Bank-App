@@ -201,20 +201,30 @@ public class TransactionServiceImpl implements TransactionService{
         LocalDateTime fromDateTime = (fromDate != null) ? fromDate.atStartOfDay() : null;
         LocalDateTime toDateTime = (toDate != null) ? toDate.plusDays(1).atStartOfDay() : null;
 
-        Page<Transaction> statementPage = (fromDateTime != null && toDateTime != null)
-                ? transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime, pageDetails)
-                : transactionRepository.findByAccount_AccountNumber(accountNumber, pageDetails);
-        List<Transaction> transactions = statementPage.getContent();
+        // NEW — three-way branch instead of two
+        Page<Transaction> statementPage;
+        List<Transaction> allTransactionsInRange;
 
-        List<Transaction> allTransactionsInRange = (fromDateTime != null && toDateTime != null)
-                ? transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime)
-                : transactionRepository.findByAccount_AccountNumber(accountNumber);
+        if (fromDateTime != null && toDateTime != null) {
+            statementPage = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime, pageDetails);
+            allTransactionsInRange = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime);
+        } else if (fromDateTime != null) {
+            statementPage = transactionRepository.findByAccount_AccountNumberAndTransactionTimeAfter(accountNumber, fromDateTime, pageDetails);
+            allTransactionsInRange = transactionRepository.findByAccount_AccountNumberAndTransactionTimeAfter(accountNumber, fromDateTime);
+        } else if (toDateTime != null) {
+            statementPage = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBefore(accountNumber, toDateTime, pageDetails);
+            allTransactionsInRange = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBefore(accountNumber, toDateTime);
+        } else {
+            statementPage = transactionRepository.findByAccount_AccountNumber(accountNumber, pageDetails);
+            allTransactionsInRange = transactionRepository.findByAccount_AccountNumber(accountNumber);
+        }
+        List<Transaction> transactions = statementPage.getContent();
 
         if (transactions.isEmpty()) {
             StatementResponse emptyResponse = new StatementResponse();
             emptyResponse.setAccountNumber(accountNumber);
             emptyResponse.setFromDate(fromDate);
-            emptyResponse.setToDate(toDate);   // FIXED — was fromDate
+            emptyResponse.setToDate(toDate);
             emptyResponse.setOpeningBalance(account.getBalance());
             emptyResponse.setCurrentBalance(account.getBalance());
             emptyResponse.setTotalCredits(BigDecimal.ZERO);
@@ -241,7 +251,6 @@ public class TransactionServiceImpl implements TransactionService{
         response.setFromDate(fromDate);
         response.setToDate(toDate);
 
-        //Balance
         BigDecimal openingBalance = transactionRepository
                 .findTopByAccount_AccountNumberAndTransactionTimeBeforeOrderByTransactionTimeDesc(accountNumber, fromDateTime)
                 .map(Transaction::getBalanceAfterTransaction)
@@ -249,7 +258,6 @@ public class TransactionServiceImpl implements TransactionService{
         response.setOpeningBalance(openingBalance);
         response.setCurrentBalance(account.getBalance());
 
-        //Total Credits and Debits
         BigDecimal totalCredits = BigDecimal.ZERO;
         BigDecimal totalDebits = BigDecimal.ZERO;
         for (Transaction trxn : allTransactionsInRange) {
