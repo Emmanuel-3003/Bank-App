@@ -1,4 +1,4 @@
-package com.application.bank.security;
+package com.application.bank.security.authenticationDTOs;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;

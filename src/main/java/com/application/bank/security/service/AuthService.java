@@ -1,8 +1,8 @@
 package com.application.bank.security.service;
 
-import com.application.bank.security.LoginRequestDTO;
-import com.application.bank.security.LoginResponseDTO;
-import com.application.bank.security.RegisterRequestDTO;
+import com.application.bank.security.authenticationDTOs.LoginRequestDTO;
+import com.application.bank.security.authenticationDTOs.LoginResponseDTO;
+import com.application.bank.security.authenticationDTOs.RegisterRequestDTO;
 
 
 public interface AuthService {

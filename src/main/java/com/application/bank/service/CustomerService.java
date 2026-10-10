@@ -7,5 +7,6 @@ public interface CustomerService {
 
     CustomerDTO updateCustomer(CustomerDTO customerDTO, Long id);
     String deleteCustomer(Long id);
-    CustomerResponse getAllCustomers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+    CustomerDTO getMyProfile();
+    //CustomerResponse getAllCustomers(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 }

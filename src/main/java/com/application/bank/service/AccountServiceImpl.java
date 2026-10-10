@@ -4,12 +4,9 @@ import com.application.bank.exceptions.APIException;
 import com.application.bank.exceptions.ResourceNotFoundException;
 import com.application.bank.model.Account;
 import com.application.bank.model.AccountStatus;
-import com.application.bank.model.AccountType;
 import com.application.bank.model.Customer;
-import com.application.bank.payload.APIResponse;
 import com.application.bank.payload.AccountDTO;
 import com.application.bank.payload.AccountResponse;
-import com.application.bank.payload.CustomerDTO;
 import com.application.bank.repository.AccountRepository;
 import com.application.bank.repository.CustomerRepository;
 import org.modelmapper.ModelMapper;
@@ -41,6 +38,12 @@ public class AccountServiceImpl implements AccountService {
     public AccountDTO openAccount(AccountDTO accountDTO, Long customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", customerId));
+
+        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!customer.getEmail().equals(authenticatedEmail)) {
+            throw new APIException("You do not have permission to open an account for this customer.");
+        }
+
         Account account = modelMapper.map(accountDTO, Account.class);
 
         account.setDateOfOpening(LocalDate.now());

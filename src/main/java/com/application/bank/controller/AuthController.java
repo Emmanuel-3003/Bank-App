@@ -1,8 +1,8 @@
 package com.application.bank.controller;
 
-import com.application.bank.security.LoginRequestDTO;
-import com.application.bank.security.LoginResponseDTO;
-import com.application.bank.security.RegisterRequestDTO;
+import com.application.bank.security.authenticationDTOs.LoginRequestDTO;
+import com.application.bank.security.authenticationDTOs.LoginResponseDTO;
+import com.application.bank.security.authenticationDTOs.RegisterRequestDTO;
 import com.application.bank.security.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

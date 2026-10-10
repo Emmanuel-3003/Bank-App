@@ -18,7 +18,7 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @GetMapping("/customers")
+    /*@GetMapping("/customers")
     public ResponseEntity<CustomerResponse> getAllCustomer(
             @RequestParam (name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
             @RequestParam (name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
@@ -27,6 +27,11 @@ public class CustomerController {
     ) {
         CustomerResponse customerResponse = customerService.getAllCustomers(pageNumber, pageSize, sortBy, sortOrder);
         return new ResponseEntity<>(customerResponse, HttpStatus.OK);
+    }*/
+
+    @GetMapping("/customers/me")
+    public ResponseEntity<CustomerDTO> getMyProfile(){
+        return new ResponseEntity<>(customerService.getMyProfile(), HttpStatus.OK);
     }
 
     @PutMapping("/customers/{id}")
