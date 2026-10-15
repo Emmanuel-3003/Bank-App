@@ -1,107 +1,55 @@
-# Bank Management System
+# Bank API
 
-A Spring Boot REST API for a simple banking application — customer onboarding, account management, and double-entry transaction processing (deposits, withdrawals, and transfers).
+A REST API for a simple banking system, built with Spring Boot. Customers register, log in, open accounts, move money, and view statements. Each customer can only access their own data.
 
 ## Features
 
-- **Customer management** — create, update, delete customers; paginated & sorted customer listing
-- **Account management** — open accounts linked to a customer, auto-generated account number, enum-based account type (`SAVINGS`/`CURRENT`) and status (`ACTIVE`/`INACTIVE`/`CLOSED`), paginated account listing per customer
-- **Transactions** — deposit, withdraw, and transfer between accounts, implemented as double-entry bookkeeping (every transfer creates a linked `DEBIT` and `CREDIT` row, each with a balance snapshot)
-- **Validation & error handling** — centralized exception handling for not-found resources, business-rule violations, and request validation failures
-- **Transactional integrity** — balance updates and transaction records are wrapped in `@Transactional` boundaries, so a partial failure can't leave money "in limbo" between accounts
+- **Auth:** register, login and logout with JWT (stateless). Passwords are hashed with BCrypt, and logged-out tokens are revoked.
+- **Accounts:** open savings or current accounts, rename them, and change their status (`ACTIVE`, `INACTIVE`, `CLOSED`).
+- **Transactions:** deposit, withdraw and transfer. Every movement is recorded as a debit or credit entry with a running balance, and each operation runs in a single database transaction.
+- **Statements:** paginated, sortable, and filterable by date range, with opening balance and credit/debit totals.
 
-## Tech Stack
+## Tech stack
 
-- Java 21, Spring Boot
-- Spring Data JPA + Hibernate
-- MySQL
-- ModelMapper (entity ↔ DTO mapping)
-- Jakarta Bean Validation
+Java 21 · Spring Boot · Spring Security · Spring Data JPA (Hibernate) · MySQL · JWT (jjwt) · ModelMapper · Maven
 
-## Project Structure
+## API overview
 
-```
-com.application.bank
-├── controller     REST endpoints
-├── service        Business logic
-├── repository     Spring Data JPA repositories
-├── model           JPA entities + enums
-├── payload        Request/response DTOs
-├── exceptions     Custom exceptions + global handler
-└── config          Constants and shared config
-```
-
-## API Overview
+All endpoints except `/api/auth/**` need the header `Authorization: Bearer <token>`.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/customers` | Create a customer |
-| `GET` | `/api/customers` | List customers (paginated, sortable) |
-| `PUT` | `/api/customers/{customerId}` | Update customer details |
-| `DELETE` | `/api/customers/{customerId}` | Delete a customer |
-| `POST` | `/api/customers/{customerId}/accounts` | Open a new account for a customer |
-| `GET` | `/api/customers/{customerId}/accounts` | List a customer's accounts (paginated, sortable) |
-| `PUT` | `/api/accounts/{accountNumber}` | Update account details |
-| `PUT` | `/api/accounts/{accountNumber}/status/{status}` | Change account status (`ACTIVE` / `INACTIVE` / `CLOSED`) |
-| `POST` | `/api/account/{accountNumber}/deposit` | Deposit money into an account |
-| `POST` | `/api/account/{accountNumber}/withdraw` | Withdraw money from an account |
-| `POST` | `/api/account/transfer` | Transfer money between two accounts |
+| POST | `/api/auth/register` | Create a customer with a password |
+| POST | `/api/auth/login` | Log in and receive a JWT |
+| POST | `/api/auth/logout` | Revoke the current token |
+| PUT / DELETE | `/api/customers/{customerId}` | Update or delete your profile |
+| POST | `/api/customers/{customerId}/accounts` | Open an account |
+| GET | `/api/customers/{customerId}/accounts` | List your accounts (paginated) |
+| PUT | `/api/accounts/{accountNumber}` | Rename an account |
+| PUT | `/api/accounts/{accountNumber}/status/{status}` | Change account status |
+| POST | `/api/account/{accountNumber}/deposit` | Deposit money |
+| POST | `/api/account/{accountNumber}/withdraw` | Withdraw money |
+| POST | `/api/account/transfer` | Transfer between accounts |
+| GET | `/api/account/{accountNumber}/statements` | Statement (`fromDate`, `toDate`, `pageNumber`, `pageSize`, `sortBy`, `sortOrder`) |
 
-## Getting Started
+## Run locally
 
-### Prerequisites
-- Java 21
-- Maven
-- MySQL running locally (or accessible via a connection URL)
+1. Install Java 21 and MySQL, then create an empty database named `bank`.
+2. Set these environment variables:
 
-### Configuration
+   | Variable | Example |
+      |---|---|
+   | `DB_URL` | `jdbc:mysql://localhost:3306/bank` |
+   | `DB_USERNAME` | `root` |
+   | `DB_PASSWORD` | your MySQL password |
+   | `JWT_SECRET` | a random string of 32+ characters |
 
-Database credentials are read from environment variables — nothing is hardcoded in the repo:
+3. Start the app: `./mvnw spring-boot:run`
 
-| Variable | Example |
-|---|---|
-| `DB_URL` | `jdbc:mysql://localhost:3306/bank` |
-| `DB_USERNAME` | `root` |
-| `DB_PASSWORD` | *(your MySQL password)* |
+The API runs on `http://localhost:8080`. Tokens expire after 1 hour (`jwt.expiration-ms`).
 
-Set these in your IDE's run configuration, or export them in your shell before running.
+## Roadmap
 
-### Run
-
-```bash
-./mvnw spring-boot:run
-```
-
-The app starts on `http://localhost:8080`.
-
-> **Note:** `spring.jpa.hibernate.ddl-auto` is currently set to `update` for local development, so schema changes apply automatically without wiping existing data on restart.
-
-## Sample Request
-
-**Open an account:**
-```
-POST /api/customers/1/accounts
-```
-```json
-{
-  "accountName": "Rahul Savings",
-  "accountType": "TYPE_SAVINGS"
-}
-```
-
-**Transfer money:**
-```
-POST /api/account/transfer
-```
-```json
-{
-  "fromAccountNumber": "AC000001",
-  "toAccountNumber": "AC000002",
-  "amount": 500,
-  "trxnNote": "Rent split"
-}
-```
-
-## Author
-
-Emmanuel Gabriel
+- Automated tests
+- Role-based access (admin)
+- Refresh tokens

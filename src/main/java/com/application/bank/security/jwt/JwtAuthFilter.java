@@ -49,7 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 email = jwtUtils.extractEmail(token);
             } catch (JwtException | IllegalArgumentException e) {
                 // expired, tampered or malformed token: continue unauthenticated
-                logger.warn("JWT rejected: " + e.getMessage());
+                //logger.warn("JWT rejected: " + e.getMessage());
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -66,7 +66,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     }
                 } catch (UsernameNotFoundException e) {
                     // the customer no longer exists: continue unauthenticated
-                    logger.warn("JWT rejected: " + e.getMessage());
+                    //logger.warn("JWT rejected: " + e.getMessage());
                 }
             }
         }
