@@ -1,7 +1,15 @@
+import { Route, Routes } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+
 export default function App() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900">
-      <h1 className="text-3xl font-semibold text-white">Bank UI is running</h1>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Dashboard />} />
+      </Route>
+    </Routes>
   )
 }
