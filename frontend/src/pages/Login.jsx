@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { parseApiError } from '../utils/errors'
 
 export default function Login() {
+  const location = useLocation()
   const { isAuthenticated, signIn } = useAuth()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ email: location.state?.email || '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -43,6 +44,12 @@ export default function Login() {
         <p className="mt-1 text-sm text-slate-500">
           Use the email and password you registered with.
         </p>
+
+        {location.state?.notice && (
+          <p role="status" className="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {location.state.notice}
+          </p>
+        )}
 
         {error && (
           <p role="alert" className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -89,6 +96,13 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-slate-500">
+          New here?{' '}
+          <Link to="/register" className="font-medium text-teal-700 hover:underline">
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   )
