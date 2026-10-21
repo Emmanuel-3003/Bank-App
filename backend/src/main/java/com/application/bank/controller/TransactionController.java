@@ -22,10 +22,15 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @PostMapping("/account/{accountNumber}/deposit")
-    public ResponseEntity<TransactionDTO> deposit(@PathVariable String accountNumber, @Valid @RequestBody TransactionDTO transactionDTO){
-        TransactionDTO message = transactionService.deposit(accountNumber, transactionDTO);
-        return new ResponseEntity<>(message, HttpStatus.OK);
+    @PostMapping("/{accountNumber}/deposit")
+    public ResponseEntity<TransactionDTO> deposit(
+            @PathVariable String accountNumber,
+            @Valid @RequestBody TransactionDTO transactionDTO) {
+
+        TransactionDTO response =
+                transactionService.deposit(accountNumber, transactionDTO);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/account/{accountNumber}/withdraw")

@@ -108,27 +108,43 @@ public class AccountServiceImpl implements AccountService {
         return modelMapper.map(savedAccount, AccountDTO.class);
     }
 
+
     @Override
     public String updateAccountStatus(String accountNumber, AccountStatus status) {
         Account accountFromDB = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Account", "Acc. No. ", accountNumber));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Account", "Acc. No. ", accountNumber));
 
-        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        String authenticatedEmail =
+                SecurityContextHolder.getContext().getAuthentication().getName();
+
         if (!accountFromDB.getCustomer().getEmail().equals(authenticatedEmail)) {
             throw new APIException("You do not have permission to access this account.");
         }
 
-        if(accountFromDB.getAccountStatus() == AccountStatus.CLOSED){
-            return "Status cannot be changed as Account is already closed..";
+        if (status == null) {
+            throw new APIException("Account status cannot be null.");
         }
-        if(status == AccountStatus.CLOSED && (accountFromDB.getBalance().compareTo(BigDecimal.ZERO) > 0)){
-            return "Account cannot be closed with a remaining balance of " + accountFromDB.getBalance() + ". Please withdraw the full amount before closing.";
+
+        if (accountFromDB.getAccountStatus() == AccountStatus.CLOSED) {
+            return "Status cannot be changed because the account is already closed.";
         }
-        if(accountFromDB.getAccountStatus() == status){
-            return "Account status is already " + status + "..";
+
+        if (accountFromDB.getAccountStatus() == status) {
+            return "Account status is already " + status + ".";
         }
+
+        if (status == AccountStatus.CLOSED
+                && accountFromDB.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            return "Account cannot be closed with a remaining balance of "
+                    + accountFromDB.getBalance()
+                    + ". Please clear the balance before closing.";
+        }
+
         accountFromDB.setAccountStatus(status);
         accountRepository.save(accountFromDB);
-        return "Account status changed to " + status + "..";
+
+        return "Account status changed to " + status + ".";
     }
+
 }

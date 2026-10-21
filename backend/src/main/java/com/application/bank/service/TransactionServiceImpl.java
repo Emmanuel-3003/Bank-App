@@ -54,7 +54,8 @@ public class TransactionServiceImpl implements TransactionService{
         if(account.getAccountStatus().equals(AccountStatus.CLOSED) || account.getAccountStatus().equals(AccountStatus.INACTIVE)){
             throw new APIException("Money cant be deposited, as your account status is " + account.getAccountStatus() + ".");
         }
-        if (transactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (transactionDTO.getAmount() == null
+                || transactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new APIException("Deposit amount must be greater than zero.");
         }
         BigDecimal newBal = account.getBalance().add(transactionDTO.getAmount()) ;
@@ -74,40 +75,65 @@ public class TransactionServiceImpl implements TransactionService{
         return newTranDTO;
     }
 
+
     @Transactional
     @Override
     public TransactionDTO withdraw(String accountNumber, TransactionDTO transactionDTO) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("account", "account number", accountNumber));
 
-        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        String authenticatedEmail =
+                SecurityContextHolder.getContext().getAuthentication().getName();
+
         if (!account.getCustomer().getEmail().equals(authenticatedEmail)) {
             throw new APIException("You do not have permission to access this account.");
         }
 
-        if(account.getAccountStatus().equals(AccountStatus.CLOSED) || account.getAccountStatus().equals(AccountStatus.INACTIVE)){
-            throw new APIException("Money can't be withdrawn, as your account status is " + account.getAccountStatus() + ".");
-        }
-        if(account.getBalance().compareTo(transactionDTO.getAmount()) < 0){
-            throw new APIException("Insufficient Balance. Your Current balance is " + account.getBalance() + ".");
+        if (account.getAccountStatus() == AccountStatus.CLOSED
+                || account.getAccountStatus() == AccountStatus.INACTIVE) {
+            throw new APIException(
+                    "Money cannot be withdrawn because your account status is "
+                            + account.getAccountStatus() + ".");
         }
 
-        BigDecimal newBal = account.getBalance().subtract(transactionDTO.getAmount());
-        account.setBalance(newBal);
+        if (transactionDTO.getAmount() == null
+                || transactionDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new APIException("Withdrawal amount must be greater than zero.");
+        }
+
+        if (account.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
+            throw new APIException(
+                    "Insufficient balance. Your current balance is "
+                            + account.getBalance() + ".");
+        }
+
+        BigDecimal newBalance =
+                account.getBalance().subtract(transactionDTO.getAmount());
+
+        account.setBalance(newBalance);
         accountRepository.save(account);
 
-        Transaction newTran = modelMapper.map(transactionDTO, Transaction.class);
-        newTran.setAccount(account);
-        String trxnId = "TRXN" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        newTran.setTrxnId(trxnId);
-        newTran.setTransactionTime(LocalDateTime.now());
-        newTran.setTransactionType(TransactionType.DEBIT);
-        newTran.setBalanceAfterTransaction(account.getBalance());
-        transactionRepository.save(newTran);
-        TransactionDTO newTranDTO = modelMapper.map(newTran, TransactionDTO.class);
-        newTranDTO.setAccountNumber(accountNumber);
-        return newTranDTO;
+        Transaction newTransaction = modelMapper.map(transactionDTO, Transaction.class);
+        newTransaction.setAccount(account);
+
+        String transactionId =
+                "TRXN" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+        newTransaction.setTrxnId(transactionId);
+        newTransaction.setTransactionTime(LocalDateTime.now());
+        newTransaction.setTransactionType(TransactionType.DEBIT);
+        newTransaction.setBalanceAfterTransaction(account.getBalance());
+
+        transactionRepository.save(newTransaction);
+
+        TransactionDTO response =
+                modelMapper.map(newTransaction, TransactionDTO.class);
+        response.setAccountNumber(accountNumber);
+
+        return response;
     }
+
 
     @Transactional
     @Override
@@ -130,7 +156,8 @@ public class TransactionServiceImpl implements TransactionService{
         if (transferRequestDTO.getFromAccountNumber().equals(transferRequestDTO.getToAccountNumber())) {
             throw new APIException("Cannot transfer to the same account.");
         }
-        if (transferRequestDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (transferRequestDTO.getAmount() == null
+                || transferRequestDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new APIException("Transfer amount must be greater than zero.");
         }
         if(fromAcc.getBalance().compareTo(transferRequestDTO.getAmount()) < 0){
@@ -183,99 +210,147 @@ public class TransactionServiceImpl implements TransactionService{
         return tranResponse;
     }
 
-    @Override
-    public StatementResponse getAccountStatement(String accountNumber, LocalDate fromDate, LocalDate toDate, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("account", "account number", accountNumber));
 
-        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+    @Override
+    public StatementResponse getAccountStatement(
+            String accountNumber,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Integer pageNumber,
+            Integer pageSize,
+            String sortBy,
+            String sortOrder) {
+
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "account", "account number", accountNumber));
+
+        String authenticatedEmail =
+                SecurityContextHolder.getContext().getAuthentication().getName();
+
         if (!account.getCustomer().getEmail().equals(authenticatedEmail)) {
-            throw new APIException("You do not have permission to access this customer's accounts.");
+            throw new APIException(
+                    "You do not have permission to access this customer's accounts.");
+        }
+
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new APIException("From date cannot be after to date.");
         }
 
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
+
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
 
-        LocalDateTime fromDateTime = (fromDate != null) ? fromDate.atStartOfDay() : null;
-        LocalDateTime toDateTime = (toDate != null) ? toDate.plusDays(1).atStartOfDay() : null;
+        LocalDateTime fromDateTime =
+                fromDate != null ? fromDate.atStartOfDay() : null;
 
-        // NEW — three-way branch instead of two
+        // Exclusive upper bound includes every transaction on the selected end date.
+        LocalDateTime toDateTime =
+                toDate != null ? toDate.plusDays(1).atStartOfDay() : null;
+
         Page<Transaction> statementPage;
         List<Transaction> allTransactionsInRange;
 
         if (fromDateTime != null && toDateTime != null) {
-            statementPage = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime, pageDetails);
-            allTransactionsInRange = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBetween(accountNumber, fromDateTime, toDateTime);
+            statementPage =
+                    transactionRepository
+                            .findByAccount_AccountNumberAndTransactionTimeBetween(
+                                    accountNumber, fromDateTime, toDateTime, pageDetails);
+
+            allTransactionsInRange =
+                    transactionRepository
+                            .findByAccount_AccountNumberAndTransactionTimeBetween(
+                                    accountNumber, fromDateTime, toDateTime);
+
         } else if (fromDateTime != null) {
-            statementPage = transactionRepository.findByAccount_AccountNumberAndTransactionTimeAfter(accountNumber, fromDateTime, pageDetails);
-            allTransactionsInRange = transactionRepository.findByAccount_AccountNumberAndTransactionTimeAfter(accountNumber, fromDateTime);
+            statementPage =
+                    transactionRepository
+                            .findByAccount_AccountNumberAndTransactionTimeAfter(
+                                    accountNumber, fromDateTime, pageDetails);
+
+            allTransactionsInRange =
+                    transactionRepository
+                            .findByAccount_AccountNumberAndTransactionTimeAfter(
+                                    accountNumber, fromDateTime);
+
         } else if (toDateTime != null) {
-            statementPage = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBefore(accountNumber, toDateTime, pageDetails);
-            allTransactionsInRange = transactionRepository.findByAccount_AccountNumberAndTransactionTimeBefore(accountNumber, toDateTime);
+            statementPage =
+                    transactionRepository
+                            .findByAccount_AccountNumberAndTransactionTimeBefore(
+                                    accountNumber, toDateTime, pageDetails);
+
+            allTransactionsInRange =
+                    transactionRepository
+                            .findByAccount_AccountNumberAndTransactionTimeBefore(
+                                    accountNumber, toDateTime);
+
         } else {
-            statementPage = transactionRepository.findByAccount_AccountNumber(accountNumber, pageDetails);
-            allTransactionsInRange = transactionRepository.findByAccount_AccountNumber(accountNumber);
-        }
-        List<Transaction> transactions = statementPage.getContent();
+            statementPage =
+                    transactionRepository.findByAccount_AccountNumber(
+                            accountNumber, pageDetails);
 
-        if (transactions.isEmpty()) {
-            StatementResponse emptyResponse = new StatementResponse();
-            emptyResponse.setAccountNumber(accountNumber);
-            emptyResponse.setFromDate(fromDate);
-            emptyResponse.setToDate(toDate);
-            emptyResponse.setOpeningBalance(account.getBalance());
-            emptyResponse.setCurrentBalance(account.getBalance());
-            emptyResponse.setTotalCredits(BigDecimal.ZERO);
-            emptyResponse.setTotalDebits(BigDecimal.ZERO);
-            emptyResponse.setTransactions(List.of());
-            emptyResponse.setPageNumber(statementPage.getNumber());
-            emptyResponse.setPageSize(statementPage.getSize());
-            emptyResponse.setTotalElements(statementPage.getTotalElements());
-            emptyResponse.setTotalPages(statementPage.getTotalPages());
-            emptyResponse.setLastPage(statementPage.isLast());
-            return emptyResponse;
+            allTransactionsInRange =
+                    transactionRepository.findByAccount_AccountNumber(accountNumber);
         }
 
-        List<TransactionDTO> transactionDTOS = transactions.stream()
-                .map(txn -> {
-                    TransactionDTO dto = modelMapper.map(txn, TransactionDTO.class);
-                    dto.setAccountNumber(accountNumber);
-                    return dto;
-                })
-                .toList();
+        BigDecimal openingBalance =
+                getOpeningBalance(accountNumber, fromDateTime);
+
+        BigDecimal totalCredits = BigDecimal.ZERO;
+        BigDecimal totalDebits = BigDecimal.ZERO;
+
+        for (Transaction transaction : allTransactionsInRange) {
+            if (transaction.getTransactionType() == TransactionType.CREDIT) {
+                totalCredits = totalCredits.add(transaction.getAmount());
+            } else if (transaction.getTransactionType() == TransactionType.DEBIT) {
+                totalDebits = totalDebits.add(transaction.getAmount());
+            }
+        }
 
         StatementResponse response = new StatementResponse();
         response.setAccountNumber(accountNumber);
         response.setFromDate(fromDate);
         response.setToDate(toDate);
-
-        BigDecimal openingBalance = transactionRepository
-                .findTopByAccount_AccountNumberAndTransactionTimeBeforeOrderByTransactionTimeDesc(accountNumber, fromDateTime)
-                .map(Transaction::getBalanceAfterTransaction)
-                .orElse(BigDecimal.ZERO);
         response.setOpeningBalance(openingBalance);
         response.setCurrentBalance(account.getBalance());
-
-        BigDecimal totalCredits = BigDecimal.ZERO;
-        BigDecimal totalDebits = BigDecimal.ZERO;
-        for (Transaction trxn : allTransactionsInRange) {
-            if (trxn.getTransactionType() == TransactionType.CREDIT) {
-                totalCredits = totalCredits.add(trxn.getAmount());
-            }
-            if (trxn.getTransactionType() == TransactionType.DEBIT) {
-                totalDebits = totalDebits.add(trxn.getAmount());
-            }
-        }
         response.setTotalCredits(totalCredits);
         response.setTotalDebits(totalDebits);
-        response.setTransactions(transactionDTOS);
-        response.setPageNumber(pageNumber);
-        response.setPageSize(pageSize);
+
+        List<TransactionDTO> transactionDTOs =
+                statementPage.getContent().stream()
+                        .map(transaction -> {
+                            TransactionDTO dto =
+                                    modelMapper.map(transaction, TransactionDTO.class);
+                            dto.setAccountNumber(accountNumber);
+                            return dto;
+                        })
+                        .toList();
+
+        response.setTransactions(transactionDTOs);
+        response.setPageNumber(statementPage.getNumber());
+        response.setPageSize(statementPage.getSize());
         response.setTotalElements(statementPage.getTotalElements());
         response.setTotalPages(statementPage.getTotalPages());
         response.setLastPage(statementPage.isLast());
+
         return response;
     }
+
+    private BigDecimal getOpeningBalance(
+            String accountNumber, LocalDateTime fromDateTime) {
+
+        if (fromDateTime == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return transactionRepository
+                .findTopByAccount_AccountNumberAndTransactionTimeBeforeOrderByTransactionTimeDesc(
+                        accountNumber, fromDateTime)
+                .map(Transaction::getBalanceAfterTransaction)
+                .orElse(BigDecimal.ZERO);
+    }
+
 }
