@@ -22,7 +22,7 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @PostMapping("/{accountNumber}/deposit")
+    @PostMapping("/account/{accountNumber}/deposit")
     public ResponseEntity<TransactionDTO> deposit(
             @PathVariable String accountNumber,
             @Valid @RequestBody TransactionDTO transactionDTO) {
