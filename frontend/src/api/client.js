@@ -4,7 +4,9 @@ import axios from 'axios'
 export const SESSION_KEY = 'bank_session'
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL:
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://bank-app-hxlb.onrender.com/api',
 })
 
 function isAuthCall(url = '') {
