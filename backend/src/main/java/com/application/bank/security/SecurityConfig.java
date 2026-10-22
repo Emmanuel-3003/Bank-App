@@ -45,7 +45,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
-                "https://ubiquitous-pixie-a2f5e8.netlify.app"
+                "https://emmanuel-bank-app.netlify.app"
         ));
 
         configuration.setAllowedMethods(List.of(
