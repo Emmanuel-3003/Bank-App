@@ -1,16 +1,66 @@
-# React + Vite
+# 🏦 Bank App: Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web interface for the Bank App, built with **React** and **Vite**.
 
-Currently, two official plugins are available:
+🔗 **Live:** [emmanuel-bank-app.netlify.app](https://emmanuel-bank-app.netlify.app/) · **Hosted on:** Netlify
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- Register, log in and log out
+- Dashboard with all your accounts and a quick form to open a new one
+- Account page to **deposit**, **withdraw** and **transfer** money
+- Transaction statements with filters and **PDF download**
+- Close an account, and view your profile
+- Protected pages: you must be logged in to see your data
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Tech Stack
 
-## Expanding the ESLint configuration
+React 19 · Vite · Tailwind CSS · React Router · Axios · jsPDF
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ⚙️ Run Locally
+
+1. Install **Node.js** (v20 or newer).
+2. Install dependencies and start the dev server:
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+3. Open `http://localhost:5173`.
+
+### API URL
+
+By default the app talks to the hosted backend on Render. To use your own backend, create a `.env` file:
+
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+> The backend must allow your frontend's origin in its CORS settings (see the backend README).
+
+## 📜 Scripts
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Create a production build in `dist/` |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Check the code with ESLint |
+
+## ☁️ Deployment (Netlify)
+
+- **Build command:** `npm run build`
+- **Publish directory:** `dist`
+- `public/_redirects` sends every route to `index.html` so page refreshes work with React Router.
+
+## 📁 Structure
+
+```
+src/
+├── api/          Axios calls to the backend
+├── components/   reusable UI pieces
+├── context/      login state
+├── pages/        Login, Register, Dashboard, AccountDetail, MyProfile
+└── utils/        helpers
+```
